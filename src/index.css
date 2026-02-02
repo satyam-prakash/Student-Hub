@@ -1,0 +1,406 @@
+html {
+  zoom: 90%;
+}
+
+:root {
+  --primary: #ff6600;
+  --primary-hover: #ff8533;
+  --primary-glow: rgba(255, 102, 0, 0.5);
+  --background: #000000;
+  --surface: #111111;
+  --surface-hover: #1a1a1a;
+  --surface-glass: rgba(17, 17, 17, 0.7);
+  --border: #333333;
+  --text: #ffffff;
+  --text-secondary: #a1a1aa;
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --error: #ef4444;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-focus-bg: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #f8f9fa;
+    --surface: #ffffff;
+    --surface-hover: #f3f4f6;
+    --surface-glass: rgba(255, 255, 255, 0.8);
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-secondary: #4b5563;
+    --input-bg: rgba(0, 0, 0, 0.05);
+    --input-focus-bg: rgba(0, 0, 0, 0.08);
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+[data-theme="light"] {
+  --background: #f8f9fa;
+  --surface: #ffffff;
+  --surface-hover: #f3f4f6;
+  --surface-glass: rgba(255, 255, 255, 0.8);
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --input-bg: rgba(0, 0, 0, 0.05);
+  --input-focus-bg: rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --background: #000000;
+  --surface: #111111;
+  --surface-hover: #1a1a1a;
+  --surface-glass: rgba(17, 17, 17, 0.7);
+  --border: #333333;
+  --text: #ffffff;
+  --text-secondary: #a1a1aa;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-focus-bg: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(255, 102, 0, 0.15), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(255, 102, 0, 0.1), transparent 30%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  backdrop-filter: blur(10px);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--input-focus-bg);
+  box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), #ff4500);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 102, 0, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.btn-secondary {
+  background-color: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-secondary);
+  transform: translateY(-2px);
+}
+
+/* Cards */
+.card {
+  background-color: var(--surface-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 3rem;
+  background: linear-gradient(to right, var(--text), var(--text-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h2 {
+  font-size: 2.25rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Utilities */
+.text-primary {
+  color: var(--primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.bg-surface {
+  background-color: var(--surface);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* Fix for Select Options Text Visibility */
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* Progress bar shine animation */
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+/* Fix for Range Slider focus ring thickness */
+input[type="range"]:focus {
+  box-shadow: none;
+  transform: none;
+  background-color: var(--border);
+  /* Keep background stable */
+}
+
+/* Custom Attendance Slider */
+.attendance-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  /* Override global input padding */
+  border: none;
+  /* Override global input border */
+  /* background is controlled inline via linear-gradient */
+}
+
+/* Webkit (Chrome, Safari, Edge) - Track */
+.attendance-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 3px;
+  background: transparent;
+  /* Essential for input gradient to show */
+}
+
+/* Firefox - Track */
+.attendance-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.attendance-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin-top: -5px;
+  /* (4px track height - 14px thumb height) / 2 */
+  transition: all 0.2s ease;
+}
+
+.attendance-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(255, 102, 0, 0.5);
+}
+
+.attendance-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.attendance-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(255, 102, 0, 0.5);
+}
