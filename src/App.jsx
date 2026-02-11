@@ -3,15 +3,16 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import AttendanceCalculator from './pages/AttendanceCalculator';
 import CGPACalculator from './pages/CGPACalculator';
+import NotesPage from './pages/NotesPage';
 import Auth from './pages/Auth';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
-  
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-  
+
   return children;
 }
 
@@ -28,6 +29,7 @@ function App() {
           }>
             <Route index element={<AttendanceCalculator />} />
             <Route path="cgpa" element={<CGPACalculator />} />
+            <Route path="notes" element={<NotesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>

@@ -140,7 +140,7 @@ export default function AttendanceCalculator() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto pb-12">
+        <div className="w-full pb-12 px-4 md:px-8">
             <header className="mb-12 text-center animate-fade-in">
                 <h1 className="text-5xl font-bold mb-4" style={{
                     background: 'linear-gradient(to right, var(--text), var(--text-secondary))',
