@@ -1,89 +1,44 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function CircularProgress({ value, max, color, size = 100 }) {
+export default function CircularProgress({ value, max = 10, color, size = 80 }) {
     const [progress, setProgress] = useState(0);
-    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => setProgress(value), 50);
+        const timer = setTimeout(() => setProgress(value), 100);
         return () => clearTimeout(timer);
     }, [value]);
 
-    const radius = 35;
+    const radius = 35; // Fixed radius for the SVG coordinate system
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - ((progress / max) * circumference);
-
-    // Hover effects
-    const currentStrokeWidth = isHovered ? 4 : 8;
-    const textScale = isHovered ? 1.2 : 1;
+    // Ensure we don't exceed max or go below 0
+    const normalizedProgress = Math.min(Math.max(progress, 0), max);
+    const strokeDashoffset = circumference - ((normalizedProgress / max) * circumference);
 
     return (
-        <div
-            style={{ position: 'relative', width: size, height: size, cursor: 'default' }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <svg
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    transform: 'rotate(-90deg)',
-                    overflow: 'visible'
-                }}
-            >
+        <div className="ring-container" style={{ width: size, height: size }}>
+            <svg className="ring-svg" viewBox="0 0 100 100">
+                {/* Background Track */}
                 <circle
-                    cx="50%"
-                    cy="50%"
+                    className="ring-bg"
+                    cx="50"
+                    cy="50"
                     r={radius}
-                    stroke="var(--border)"
-                    strokeWidth={currentStrokeWidth}
                     fill="transparent"
-                    style={{ transition: 'stroke-width 0.3s ease-in-out' }}
                 />
+                {/* Progress Circle */}
                 <circle
-                    cx="50%"
-                    cy="50%"
+                    className="ring-progress"
+                    cx="50"
+                    cy="50"
                     r={radius}
-                    stroke={color}
-                    strokeWidth={currentStrokeWidth}
                     fill="transparent"
+                    stroke={color}
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
-                    style={{
-                        transition: 'stroke-dashoffset 1s ease-out, stroke-width 0.3s ease-in-out'
-                    }}
                 />
             </svg>
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                    pointerEvents: 'none'
-                }}
-            >
-                <span
-                    style={{
-                        fontSize: 'clamp(1rem, 4vw, 1.5rem)',
-                        fontWeight: 'bold',
-                        color: 'var(--text)',
-                        textAlign: 'center',
-                        transform: `scale(${textScale})`,
-                        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                    }}
-                >
-                    {typeof value === 'number' ? value.toFixed(2) : '0.00'}
-                </span>
+            <div className="ring-value">
+                {typeof value === 'number' ? value.toFixed(2) : '0.00'}
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 export default function HeaderActions({ mobile = false, onAction }) {
     const buttonStyle = (variant) => {

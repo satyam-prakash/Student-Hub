@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import AttendanceCalculator from './pages/AttendanceCalculator';
 import CGPACalculator from './pages/CGPACalculator';
 import NotesPage from './pages/NotesPage';
+import ExpenseTracker from './pages/ExpenseTracker';
 import Auth from './pages/Auth';
 
 function ProtectedRoute({ children }) {
@@ -30,6 +31,7 @@ function App() {
             <Route index element={<AttendanceCalculator />} />
             <Route path="cgpa" element={<CGPACalculator />} />
             <Route path="notes" element={<NotesPage />} />
+            <Route path="expenses" element={<ExpenseTracker />} />
           </Route>
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>

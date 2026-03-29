@@ -1,6 +1,5 @@
-import { X, Upload } from 'lucide-react';
-import UploadProgressDisplay from './UploadProgressDisplay';
-import ImagePreviewGallery from './ImagePreviewGallery';
+import { X, Upload, FileText, CheckCircle, Trash2 } from 'lucide-react';
+import './ImageUploadModal.css';
 
 export default function ImageUploadModal({
     show,
@@ -19,6 +18,7 @@ export default function ImageUploadModal({
 
     return (
         <div
+            className="modal-overlay"
             onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -42,121 +42,114 @@ export default function ImageUploadModal({
                 onDragStateChange(false);
                 onFileSelect({ target: { files: e.dataTransfer.files } });
             }}
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0,0,0,0.8)',
-                zIndex: 10000,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(5px)'
-            }}
         >
-            {/* Global Drag Overlay */}
-            {isDragging && !uploading && (
-                <div
-                    className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300 pointer-events-none"
-                    style={{
-                        background: 'rgba(255, 102, 0, 0.4)',
-                        zIndex: 99999,
-                    }}
-                >
-                    <div className="text-center transform scale-110">
-                        <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 bg-primary text-white shadow-2xl animate-bounce" style={{ background: 'var(--primary)' }}>
-                            <Upload size={48} />
-                        </div>
-                        <h3 className="text-4xl font-bold" style={{ color: 'var(--primary)', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                            Drop Anywhere!
-                        </h3>
-                    </div>
-                </div>
-            )}
-
-            <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl max-w-4xl w-full mx-4 shadow-2xl relative animate-fade-in flex flex-col" style={{ maxHeight: '90vh', background: 'var(--surface)', color: 'var(--text)', borderColor: 'var(--border)' }}>
+            <div className="modal-content">
                 {/* Header */}
-                <div className="p-8 pb-4 border-b border-white/10 flex justify-between items-start" style={{ borderColor: 'var(--border)' }}>
-                    <div>
-                        <h2 className="text-2xl font-bold mb-2">Upload Grade Sheet</h2>
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload screenshots of your grade history. AI will extract your grades automatically.</p>
-                    </div>
-                    <button
-                        onClick={() => !uploading && onClose()}
-                        className="transition-colors hover:scale-110 p-2 -mr-2 -mt-2 rounded-full"
-                        style={{
-                            backgroundColor: 'transparent',
-                            color: '#dc2626',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <X size={24} strokeWidth={2.5} />
+                <header className="modal-header">
+                    <h1 className="modal-title">Upload Grade Sheet</h1>
+                    <button className="btn-close" onClick={onClose}>
+                        <X size={24} />
                     </button>
-                </div>
+                </header>
 
-                {/* Scrollable Content */}
-                <div className="p-8 pt-6 overflow-y-auto custom-scrollbar relative">
+                {/* Body */}
+                <main className="modal-body">
+                    {/* File Input (Hidden) */}
                     <input
                         type="file"
-                        id="screenshot-input"
-                        multiple
-                        accept="image/*"
+                        id="file-upload"
                         className="hidden"
+                        multiple
+                        accept="image/*,.pdf"
                         onChange={onFileSelect}
                     />
 
-                    {!uploading ? (
-                        <div
-                            className="border-2 border-dashed rounded-xl py-20 px-16 text-center transition-all duration-300 cursor-pointer hover:border-primary/50"
-                            style={{
-                                borderColor: 'var(--border)',
-                                background: 'var(--input-bg)',
-                            }}
-                            onClick={() => document.getElementById('screenshot-input').click()}
-                        >
-                            <div
-                                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300"
-                                style={{
-                                    background: 'rgba(255, 102, 0, 0.2)',
-                                    pointerEvents: 'none'
-                                }}
-                            >
-                                <Upload
-                                    size={32}
-                                    style={{
-                                        color: isDragging ? '#ffffff' : 'var(--primary)',
-                                        transition: 'all 0.3s'
-                                    }}
-                                />
-                            </div>
-
-                            <h3 className="text-lg font-semibold mb-2" style={{ color: isDragging ? 'var(--primary)' : 'var(--text)', pointerEvents: 'none' }}>
-                                {isDragging ? 'Drop your images here!' : 'Click to upload or drag and drop'}
-                            </h3>
-                            <p className="text-sm" style={{ color: 'var(--text-secondary)', pointerEvents: 'none' }}>
-                                Supports PNG, JPG (Max 5MB)
+                    {/* Dropzone */}
+                    <section
+                        className={`dropzone ${isDragging ? 'drag-active' : ''}`}
+                        onClick={() => document.getElementById('file-upload').click()}
+                    >
+                        <div className="drop-icon">
+                            <Upload size={64} strokeWidth={1.5} />
+                        </div>
+                        <div className="text-center">
+                            <p className="drop-text-main">
+                                {isDragging ? 'Drop files here' : 'Drag & Drop files here'}
+                            </p>
+                            <p className="drop-text-sub">
+                                Click to <span className="drop-link">upload</span> or browse files from your computer
                             </p>
                         </div>
-                    ) : (
-                        <UploadProgressDisplay
-                            uploadProgress={uploadProgress}
-                            progressText={progressText}
-                        />
-                    )}
+                        <div className="supported-formats">
+                            <span className="format-badge">PDF</span>
+                            <span className="format-badge">JPG</span>
+                            <span className="format-badge">PNG</span>
+                        </div>
+                    </section>
 
-                    <ImagePreviewGallery
-                        uploadedScreenshots={uploadedScreenshots}
-                        uploading={uploading}
-                        onRemoveImage={onRemoveImage}
-                        onProcessImages={onProcessImages}
-                    />
-                </div>
+                    {/* Recent Uploads */}
+                    {uploadedScreenshots.length > 0 && (
+                        <section>
+                            <h2 className="section-title">Recent Uploads</h2>
+                            <div className="uploads-list">
+                                {uploadedScreenshots.map((file, index) => (
+                                    <div key={index} className="upload-item">
+                                        <div className="file-info">
+                                            <div className={`file-icon ${!uploading ? 'success' : ''}`}>
+                                                {uploading ? <FileText size={20} /> : <CheckCircle size={20} />}
+                                            </div>
+                                            <div className="file-details">
+                                                <span className="file-name">
+                                                    {file.name || `Screenshot ${index + 1}`}
+                                                </span>
+                                                <span className="file-meta">
+                                                    {/* We assume ~2MB for screenshots as we don't have exact size in prop currently, 
+                                                        or we can omit size. Timestamps also mocked for now or 'Just now' */}
+                                                    Ready to process
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="status-badge">
+                                            {uploading ? (
+                                                <>
+                                                    <span className="status-dot"></span>
+                                                    <span className="status-text processing">Processing {Math.round(uploadProgress)}%...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="status-pill">Analyzed</span>
+                                                    <button
+                                                        className="btn-remove"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onRemoveImage(index);
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </main>
+
+                {/* Footer */}
+                <footer className="modal-footer">
+                    <button className="btn-cancel" onClick={onClose}>
+                        Cancel
+                    </button>
+                    <button
+                        className="btn-extract"
+                        onClick={onProcessImages}
+                        disabled={uploading || uploadedScreenshots.length === 0}
+                    >
+                        {uploading ? 'Processing...' : 'Extract Grades'}
+                    </button>
+                </footer>
             </div>
         </div>
     );

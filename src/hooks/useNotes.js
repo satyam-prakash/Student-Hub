@@ -5,6 +5,7 @@ export function useNotes() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [trendingNotes, setTrendingNotes] = useState([]);
 
     // Fetch all notes
     const fetchNotes = async (filters = {}) => {
@@ -36,6 +37,22 @@ export function useNotes() {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch trending notes (top 5 by downloads)
+    const fetchTrendingNotes = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('notes')
+                .select('*')
+                .order('downloads', { ascending: false })
+                .limit(5);
+
+            if (error) throw error;
+            setTrendingNotes(data || []);
+        } catch (err) {
+            console.error('Error fetching trending notes:', err);
         }
     };
 
@@ -109,6 +126,8 @@ export function useNotes() {
         fetchNotes,
         deleteNote,
         incrementDownloads,
-        createNote
+        createNote,
+        trendingNotes,
+        fetchTrendingNotes
     };
 }

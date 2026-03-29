@@ -1,0 +1,440 @@
+/* CGPACalculator.css */
+
+:root {
+    --primary-orange: #ff6b00;
+    --primary-orange-hover: #e65100;
+    --success-green: #22c55e;
+    --blue-info: #3b82f6;
+    --purple-accent: #9333ea;
+
+    /* Light Mode Defaults */
+    --cgpa-bg: #f3f4f6;
+    --cgpa-card-bg: #ffffff;
+    --cgpa-text-main: #111827;
+    --cgpa-text-muted: #6b7280;
+    --cgpa-border: #e5e7eb;
+    --cgpa-input-bg: #f9fafb;
+    --cgpa-input-border: #d1d5db;
+}
+
+[data-theme='dark'] {
+    --cgpa-bg: #0a0a0a;
+    --cgpa-card-bg: #121212;
+    --cgpa-text-main: #f3f4f6;
+    --cgpa-text-muted: #9ca3af;
+    --cgpa-border: #262626;
+    --cgpa-input-bg: #1f1f1f;
+    --cgpa-input-border: #374151;
+}
+
+/* Page Layout */
+.cgpa-page {
+    background-color: var(--cgpa-bg);
+    min-height: 100vh;
+    color: var(--cgpa-text-main);
+    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Inter', sans-serif;
+}
+
+.cgpa-container {
+    max-width: 112rem;
+    /* max-w-screen-2xl */
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* Header Section */
+.cgpa-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .cgpa-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.cgpa-title h1 {
+    font-size: 2.25rem;
+    /* text-4xl */
+    font-weight: 700;
+    color: var(--cgpa-text-main);
+    margin-bottom: 0.5rem;
+}
+
+.cgpa-title p {
+    color: var(--cgpa-text-muted);
+}
+
+.cgpa-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-orange);
+    color: white;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-orange-hover);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--purple-accent);
+    color: white;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3);
+}
+
+.btn-secondary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+/* Stats Row (Horizontal Scroll) */
+.stats-scroll-container {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    margin-bottom: 2.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cgpa-border) transparent;
+}
+
+/* Center items when they fit, scroll when they don't */
+.stats-scroll-container::before,
+.stats-scroll-container::after {
+    content: '';
+    margin: auto;
+}
+
+.stats-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.stats-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.stats-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--cgpa-border);
+    border-radius: 4px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.ring-container {
+    position: relative;
+    /* Size is now handled by inline styles from the component prop */
+    margin-bottom: 0.75rem;
+    cursor: default;
+}
+
+.ring-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.ring-bg {
+    stroke: var(--cgpa-border);
+    stroke-width: 8px;
+    transition: stroke-width 0.3s ease-in-out;
+}
+
+.ring-progress {
+    stroke-linecap: round;
+    stroke-width: 8px;
+    transition: stroke-dashoffset 1s ease-out, stroke-width 0.3s ease-in-out;
+}
+
+/* Hover Effects */
+.ring-container:hover .ring-bg,
+.ring-container:hover .ring-progress {
+    stroke-width: 4px;
+}
+
+.ring-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--cgpa-text-main);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ring-container:hover .ring-value {
+    transform: scale(1.2);
+}
+
+.stat-label h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cgpa-text-main);
+    text-align: center;
+}
+
+.stat-label p {
+    font-size: 0.625rem;
+    color: var(--cgpa-text-muted);
+    text-align: center;
+}
+
+/* Grid Layout */
+.term-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .term-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .term-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Term Card */
+.term-card {
+    background-color: var(--cgpa-card-bg);
+    border: 1px solid var(--cgpa-border);
+    border-top: 4px solid var(--primary-orange);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.term-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.term-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cgpa-text-main);
+}
+
+.term-stats-mini {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.mini-stat {
+    text-align: center;
+}
+
+.mini-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--cgpa-text-muted);
+    letter-spacing: 0.05em;
+}
+
+.mini-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.val-actual {
+    color: var(--blue-info);
+}
+
+.val-target {
+    color: var(--success-green);
+}
+
+.btn-icon {
+    color: var(--cgpa-text-muted);
+    transition: color 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.btn-icon:hover {
+    color: #ef4444;
+    /* red-500 */
+}
+
+/* Course Table/Grid */
+.course-grid-header {
+    display: grid;
+    grid-template-columns: 5fr 1fr 2fr 2fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cgpa-text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    padding: 0 0.25rem;
+}
+
+.course-row {
+    display: grid;
+    grid-template-columns: 5fr 1fr 2fr 2fr 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+/* Inputs */
+.cgpa-input,
+.cgpa-select {
+    width: 100%;
+    background-color: var(--cgpa-input-bg);
+    border: 1px solid var(--cgpa-input-border);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--cgpa-text-main);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cgpa-input:focus,
+.cgpa-select:focus {
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 1px var(--primary-orange);
+}
+
+.cgpa-input.text-center {
+    text-align: center;
+}
+
+/* Read-only Grade Box */
+.grade-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    background-color: var(--cgpa-input-bg);
+    border: 1px solid var(--cgpa-input-border);
+    border-radius: 0.25rem;
+}
+
+.grade-box span {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--success-green);
+}
+
+/* Add Buttons */
+.btn-add-subject {
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--cgpa-border);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--cgpa-text-muted);
+    background: transparent;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-add-subject:hover {
+    color: var(--primary-orange);
+}
+
+/* Add Semester Card */
+.add-semester-card {
+    border: 2px dashed var(--cgpa-border);
+    border-radius: 0.75rem;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.add-semester-card:hover {
+    border-color: var(--primary-orange);
+}
+
+.add-sem-content {
+    text-align: center;
+}
+
+.add-icon-circle {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: var(--cgpa-input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    transition: background-color 0.2s;
+}
+
+.add-semester-card:hover .add-icon-circle {
+    background-color: var(--primary-orange);
+}
+
+.add-semester-card:hover .add-icon-circle svg {
+    color: white;
+}
+
+.add-sem-text {
+    color: var(--cgpa-text-muted);
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.add-semester-card:hover .add-sem-text {
+    color: var(--primary-orange);
+}

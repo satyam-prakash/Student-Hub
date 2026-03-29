@@ -5,11 +5,12 @@ import NoteCard from '../components/NoteCard';
 import NotesSearchBar from '../components/NotesSearchBar';
 import NoteUploadModal from '../components/NoteUploadModal';
 import DocumentViewerModal from '../components/DocumentViewerModal';
-import { Upload, Loader2, FileText } from 'lucide-react';
+import { Upload, Loader2, FileText, TrendingUp, ArrowRight } from 'lucide-react';
+import './NotesPage.css';
 
 export default function NotesPage() {
     const { user } = useAuth();
-    const { notes, loading, fetchNotes, deleteNote, incrementDownloads, createNote } = useNotes();
+    const { notes, loading, fetchNotes, deleteNote, incrementDownloads, createNote, trendingNotes, fetchTrendingNotes } = useNotes();
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [filters, setFilters] = useState({});
     const [viewerNote, setViewerNote] = useState(null);
@@ -20,6 +21,7 @@ export default function NotesPage() {
 
     useEffect(() => {
         fetchNotes();
+        fetchTrendingNotes();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -39,118 +41,132 @@ export default function NotesPage() {
     };
 
     return (
-        <div className="w-full pb-12 px-4 md:px-8">
-            {/* Header */}
-            <header className="mb-8 text-center animate-fade-in">
-                <h1 className="font-bold mb-4" style={{
-                    background: 'linear-gradient(to right, var(--text), var(--text-secondary))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    fontSize: 'clamp(2rem, 8vw, 3rem)'
-                }}>
-                    📚 Notes Community
-                </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.875rem, 3vw, 1.125rem)' }}>
-                    Share and discover study materials by course code
-                </p>
-            </header>
-
-            {/* Upload Button */}
-            {user && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>
+        <div className="notes-page-container">
+            {/* Header Section */}
+            <div className="notes-header-section">
+                <div>
+                    <h1 className="notes-page-title">
+                        Community Notes Hub
+                    </h1>
+                    <p className="notes-page-subtitle max-w-2xl">
+                        Share knowledge, find resources, and grow together. Access thousands of peer-reviewed notes and study guides.
+                    </p>
+                </div>
+                {user && (
                     <button
                         onClick={() => setShowUploadModal(true)}
-                        className="btn-primary"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}
+                        className="header-upload-btn"
                     >
                         <Upload size={20} />
-                        <span>Upload Note</span>
+                        Upload New Resource
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
-            {/* Search Bar */}
-            <NotesSearchBar onSearch={handleSearch} />
+            {/* Layout Grid */}
+            <div className="notes-layout-grid">
 
-            {/* Loading State */}
-            {loading && (
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '4rem',
-                    gap: '1rem'
-                }}>
-                    <Loader2 size={48} className="animate-spin" style={{ color: 'var(--primary)' }} />
-                    <p style={{ color: 'var(--text-secondary)' }}>Loading notes...</p>
-                </div>
-            )}
+                {/* Main Content Column */}
+                <div className="notes-main-content">
+                    {/* Search & Filters */}
+                    <div className="search-section">
+                        <NotesSearchBar onSearch={handleSearch} />
+                    </div>
 
-            {/* Notes Grid */}
-            {!loading && notes.length > 0 && (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    gap: '2rem'
-                }}>
-                    {notes.map(note => (
-                        <NoteCard
-                            key={note.id}
-                            note={note}
-                            onDelete={handleDelete}
-                            onDownload={incrementDownloads}
-                            onView={handleViewNote}
-                        />
-                    ))}
-                </div>
-            )}
+                    {/* Loading & Empty States */}
+                    {loading && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem', gap: '1rem' }}>
+                            <Loader2 size={48} className="animate-spin text-orange-500" />
+                            <p style={{ color: '#9ca3af' }}>Loading resources...</p>
+                        </div>
+                    )}
 
-            {/* Empty State */}
-            {!loading && notes.length === 0 && (
-                <div className="card" style={{
-                    textAlign: 'center',
-                    padding: '4rem 2rem'
-                }}>
-                    <FileText size={64} style={{ color: 'var(--text-secondary)', margin: '0 auto 1rem' }} />
-                    <h3 style={{ color: 'var(--text)', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-                        No notes found
-                    </h3>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                        {filters.search || filters.courseCode || filters.semester
-                            ? 'Try adjusting your filters'
-                            : 'Be the first to share notes with the community!'}
-                    </p>
-                    {user && !filters.search && !filters.courseCode && !filters.semester && (
-                        <button
-                            onClick={() => setShowUploadModal(true)}
-                            className="btn-primary"
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <Upload size={20} />
-                            <span>Upload First Note</span>
-                        </button>
+                    {!loading && notes.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '4rem 2rem', backgroundColor: 'var(--surface-dark)', border: '1px solid var(--border-color)', borderRadius: '0.75rem' }}>
+                            <FileText size={64} style={{ color: '#4b5563', margin: '0 auto 1rem' }} />
+                            <h3 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No notes found</h3>
+                            <p style={{ color: '#9ca3af' }}>Try adjusting your filters or be the first to contribute.</p>
+                        </div>
+                    )}
+
+                    {/* Notes Grid */}
+                    {!loading && notes.length > 0 && (
+                        <div className="notes-card-grid">
+                            {notes.map(note => (
+                                <NoteCard
+                                    key={note.id}
+                                    note={note}
+                                    onDelete={handleDelete}
+                                    onDownload={incrementDownloads}
+                                    onView={handleViewNote}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Load More Button */}
+                    {!loading && notes.length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+                            <button className="load-more-btn">
+                                Load More Resources
+                            </button>
+                        </div>
                     )}
                 </div>
-            )}
 
-            {/* Upload Modal */}
+                {/* Sidebar Column */}
+                <div className="sidebar-column">
+                    {/* Trending Widget */}
+                    <div className="sidebar-widget">
+                        <div className="sidebar-header-row">
+                            <TrendingUp size={24} style={{ color: 'var(--primary-orange)' }} />
+                            <h2 className="sidebar-title">Trending This Week</h2>
+                        </div>
+                        <div className="sidebar-list">
+                            {trendingNotes.map((item, index) => (
+                                <div key={item.id} className="trending-list-item group">
+                                    <div className="trending-number">
+                                        {index + 1}
+                                    </div>
+                                    <div className="trending-text">
+                                        <h4>{item.title}</h4>
+                                        <span>{item.downloads} downloads</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                            <a href="#" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary-orange)', display: 'flex', alignItems: 'center', gap: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                View All Rankings
+                                <ArrowRight size={16} />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Reputation Banner */}
+                    <div className="reputation-banner">
+                        <div className="card-bg-pattern"></div>
+                        <h3 className="sidebar-title" style={{ color: 'white', position: 'relative', zIndex: 10, marginBottom: '0.5rem' }}>Earn Reputation!</h3>
+                        <p>
+                            Upload your own notes to help peers and earn badges on your profile.
+                        </p>
+                        <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="white-glass-btn"
+                        >
+                            Start Uploading
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modals */}
             <NoteUploadModal
                 show={showUploadModal}
                 onClose={() => setShowUploadModal(false)}
                 onUploadSuccess={handleUploadSuccess}
             />
 
-            {/* Document Viewer Modal */}
             <DocumentViewerModal
                 show={!!viewerNote}
                 onClose={() => setViewerNote(null)}

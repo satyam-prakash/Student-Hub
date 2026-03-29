@@ -1,16 +1,103 @@
-# React + Vite
+# Personal Expense Tracker – Feature Notes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Core Features (Must-Have)
 
-Currently, two official plugins are available:
+* Add, edit, and delete expenses
+* Categorize expenses (food, travel, bills, etc.)
+* Multi-wallet support (cash, bank, UPI, card)
+* Monthly and weekly summaries
+* Charts for spending analysis
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 2. Smart & Advanced Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### AI-Based Insights
 
-## Expanding the ESLint configuration
+* Analyze spending habits
+* Show trends (e.g., increased food spending)
+* Suggest ways to save money
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Auto Categorization
+
+* Detect category using keywords or past behavior
+
+### Recurring Expense Detection
+
+* Identify subscriptions or repeated payments
+
+---
+
+## 3. User-Centric Features
+
+### Goal-Based Saving
+
+* Set savings targets
+* Track progress with visual indicators
+* Provide daily/weekly spending limits
+
+### Smart Alerts
+
+* Notify when nearing budget limits
+* Detect unusual spending
+
+### Voice Input
+
+* Add expenses using voice commands
+
+---
+
+## 4. Unique Differentiators
+
+### Location-Based Tracking
+
+* Tag expenses with location
+* Show spending patterns by place
+
+### Subscription Manager
+
+* Track monthly subscriptions
+* Show total recurring costs
+
+### Predictive Analysis
+
+* Forecast future spending
+* Warn if user may exceed budget
+
+---
+
+## 5. Engagement Features
+
+### Gamification
+
+* Streaks for controlled spending
+* Achievement badges
+
+### Visual Story Reports
+
+* Monthly summary in storytelling format
+* Fun insights and highlights
+
+---
+
+## 6. Social & Practical Features
+
+### Expense Splitting
+
+* Track shared expenses with friends
+* Show who owes whom
+
+### Export Options
+
+* Export data as PDF or Excel
+
+---
+
+## 7. Bonus Features (Optional)
+
+* Dark mode UI
+* Offline support
+* Receipt scanning (QR or image)
+* SMS-based expense detection
+
+---

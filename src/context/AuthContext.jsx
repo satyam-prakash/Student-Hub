@@ -28,9 +28,92 @@ export const AuthProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
+    // Sync Profile Data (Email, Name, Avatar) with Auth Data
+    useEffect(() => {
+        const syncProfileData = async () => {
+            if (!user) return;
+
+            try {
+                // Get current profile
+                // Use maybeSingle() to avoid 406 error if row is missing
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                const metadata = user.user_metadata || {};
+                const googleName = metadata.full_name || metadata.name;
+
+                // Case 1: Profile does not exist - INSERT
+                if (!profile) {
+                    console.log('Profile missing. Creating new profile from Google data...');
+                    const newProfile = {
+                        id: user.id,
+                        email: user.email,
+                        full_name: googleName || 'Student',
+                        // Use PENDING prefix to trigger onboarding flow
+                        registration_number: 'PENDING_' + user.id
+                    };
+
+                    const { error: insertError } = await supabase
+                        .from('profiles')
+                        .insert([newProfile]);
+
+                    if (insertError) {
+                        console.error('Error creating profile:', insertError);
+                    } else {
+                        console.log('Created new profile:', newProfile);
+                    }
+                    return;
+                }
+
+                // Case 2: Profile exists - UPDATE if needed
+                const updates = {};
+
+                // 2.1 Sync Email
+                if (profile.email !== user.email) {
+                    updates.email = user.email;
+                }
+
+                // 2.2 Sync Name from Google (if profile name is empty or default)
+                const currentName = profile.full_name;
+                if (googleName && (!currentName || currentName === 'Student')) {
+                    updates.full_name = googleName;
+                }
+
+                // Apply updates if any
+                if (Object.keys(updates).length > 0) {
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update(updates)
+                        .eq('id', user.id);
+
+                    if (updateError) console.error('Error updating profile:', updateError);
+                    else console.log('Profile synced with Google data:', updates);
+                }
+
+            } catch (err) {
+                console.error('Error syncing profile data:', err);
+            }
+        };
+
+        syncProfileData();
+    }, [user]);
+
     const value = {
         signUp: (data) => supabase.auth.signUp(data),
         signIn: (data) => supabase.auth.signInWithPassword(data),
+        googleSignIn: () => {
+            console.log('Google Sign In initiated.');
+            console.log('RedirectTo Origin:', window.location.origin);
+            return supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+        },
         signOut: async () => {
             setUser(null); // Optimistically clear user to trigger UI update
             await supabase.auth.signOut();

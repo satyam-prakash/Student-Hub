@@ -7,11 +7,44 @@ import ThemeSwitcher from './ThemeSwitcher';
 import NavigationLinks from './NavigationLinks';
 import HeaderActions from './HeaderActions';
 import MobileDrawer from './MobileDrawer';
+import OnboardingModal from './OnboardingModal';
+import ProfileModal from './ProfileModal';
+import { supabase } from '../lib/supabase';
+import { useEffect } from 'react';
 
 export default function Layout() {
     const { user, signOut } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [profile, setProfile] = useState(null);
     const isMobile = useMediaQuery('(max-width: 768px)');
+
+    // Fetch profile to check for PENDING status
+    useEffect(() => {
+        if (user) {
+            supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle()
+                .then(({ data }) => {
+                    if (data) {
+                        setProfile(data);
+                        if (data.registration_number?.startsWith('PENDING_')) {
+                            setShowOnboarding(true);
+                        }
+                    }
+                });
+        }
+    }, [user]);
+
+    const handleOnboardingComplete = (newRegNo) => {
+        setProfile(prev => ({ ...prev, registration_number: newRegNo }));
+        setShowOnboarding(false);
+        // Dispatch global event to update other components if needed
+        window.dispatchEvent(new CustomEvent('profileUpdated'));
+    };
 
     const handleSignOut = async () => {
         try {
@@ -30,11 +63,14 @@ export default function Layout() {
             window.dispatchEvent(event);
         } else if (action === 'logout') {
             handleSignOut();
+        } else if (action === 'profile') {
+            setShowProfileModal(true);
         }
     };
 
     return (
         <div className="min-h-screen flex flex-col">
+            {/* ... Navbar code ... */}
             <nav style={{
                 backgroundColor: 'var(--background)',
                 borderBottom: '1px solid var(--border)',
@@ -71,9 +107,28 @@ export default function Layout() {
                             <>
                                 <div style={{ height: '1.5rem', width: '1px', backgroundColor: 'var(--border)' }}></div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
-                                        {user.user_metadata?.registration_number || user.email?.split('@')[0]}
-                                    </span>
+                                    <button
+                                        onClick={() => setShowProfileModal(true)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            fontSize: '0.875rem',
+                                            color: 'var(--text-secondary)',
+                                            fontWeight: '500',
+                                            transition: 'color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                                        title="View Profile"
+                                    >
+                                        <User size={16} />
+                                        <span>{profile?.registration_number || user.user_metadata?.registration_number || user.email?.split('@')[0]}</span>
+                                    </button>
                                     <HeaderActions onAction={handleAction} />
                                 </div>
                             </>
@@ -111,6 +166,16 @@ export default function Layout() {
             <footer className="border-t border-gray-800 py-6 text-center text-gray-600 text-sm">
                 <p>© {new Date().getFullYear()} StudentHub. Built for excellence.</p>
             </footer>
+
+            <ProfileModal
+                show={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+            />
+
+            <OnboardingModal
+                show={showOnboarding}
+                onComplete={handleOnboardingComplete}
+            />
         </div>
     );
 }

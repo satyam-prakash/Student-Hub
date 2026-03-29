@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getCourseCodesByDepartment, departmentNames } from '../utils/courseCodeUtils';
+import '../pages/NotesPage.css';
 
 export default function NotesSearchBar({ onSearch }) {
     const [searchText, setSearchText] = useState('');
@@ -8,16 +9,10 @@ export default function NotesSearchBar({ onSearch }) {
     const [selectedCourseCode, setSelectedCourseCode] = useState('');
     const [selectedSemester, setSelectedSemester] = useState('');
 
-    // Get course codes grouped by department
     const coursesByDept = getCourseCodesByDepartment();
     const departments = Object.keys(coursesByDept).sort();
+    const availableCourses = selectedDepartment ? coursesByDept[selectedDepartment] || [] : [];
 
-    // Get courses for selected department
-    const availableCourses = selectedDepartment
-        ? coursesByDept[selectedDepartment] || []
-        : [];
-
-    // Debounced search
     useEffect(() => {
         const timer = setTimeout(() => {
             onSearch({
@@ -26,66 +21,37 @@ export default function NotesSearchBar({ onSearch }) {
                 semester: selectedSemester
             });
         }, 300);
-
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchText, selectedCourseCode, selectedSemester]);
 
-    const handleClearFilters = () => {
-        setSearchText('');
-        setSelectedDepartment('');
-        setSelectedCourseCode('');
-        setSelectedSemester('');
-    };
-
-    const hasFilters = searchText || selectedCourseCode || selectedSemester;
-
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            marginBottom: '2rem'
-        }}>
+        <div className="search-filter-container">
             {/* Search Input */}
-            <div style={{ position: 'relative' }}>
-                <Search
-                    size={20}
-                    style={{
-                        position: 'absolute',
-                        left: '1rem',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: 'var(--text-secondary)'
-                    }}
-                />
+            <div className="search-input-group">
+                <div className="search-icon-absolute">
+                    <Search size={20} />
+                </div>
                 <input
                     type="text"
-                    placeholder="Search notes by title, description, or course code..."
+                    placeholder="Search by title, topic, or author..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    style={{
-                        paddingLeft: '3rem',
-                        width: '100%'
-                    }}
+                    className="notes-search-input"
                 />
             </div>
 
-            {/* Filters Row */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '1rem'
-            }}>
-                {/* Department Filter */}
+            {/* Filters */}
+            <div className="filters-scroll-container">
                 <select
                     value={selectedDepartment}
                     onChange={(e) => {
                         setSelectedDepartment(e.target.value);
-                        setSelectedCourseCode(''); // Reset course when department changes
+                        setSelectedCourseCode('');
                     }}
+                    className="notes-select"
                 >
-                    <option value="">All Departments</option>
+                    <option value="">Department</option>
                     {departments.map(dept => (
                         <option key={dept} value={dept}>
                             {dept} - {departmentNames[dept] || dept}
@@ -93,45 +59,29 @@ export default function NotesSearchBar({ onSearch }) {
                     ))}
                 </select>
 
-                {/* Course Code Filter */}
                 <select
                     value={selectedCourseCode}
                     onChange={(e) => setSelectedCourseCode(e.target.value)}
                     disabled={!selectedDepartment}
+                    className="notes-select"
+                    style={!selectedDepartment ? { opacity: 0.6 } : {}}
                 >
-                    <option value="">All Courses</option>
+                    <option value="">Subject</option>
                     {availableCourses.map(code => (
                         <option key={code} value={code}>{code}</option>
                     ))}
                 </select>
 
-                {/* Semester Filter */}
                 <select
                     value={selectedSemester}
                     onChange={(e) => setSelectedSemester(e.target.value)}
+                    className="notes-select"
                 >
-                    <option value="">All Semesters</option>
+                    <option value="">Semester</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
                         <option key={sem} value={sem}>Semester {sem}</option>
                     ))}
                 </select>
-
-                {/* Clear Filters Button */}
-                {hasFilters && (
-                    <button
-                        onClick={handleClearFilters}
-                        className="btn-secondary"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem'
-                        }}
-                    >
-                        <X size={16} />
-                        <span>Clear Filters</span>
-                    </button>
-                )}
             </div>
         </div>
     );

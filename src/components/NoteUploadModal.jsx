@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { X, Upload, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getCourseCodesByDepartment, departmentNames, getSemesterForCourse } from '../utils/courseCodeUtils';
+import { ArrowLeft, CloudUpload, Upload, X, BookOpen, Calendar, Lock, Globe, Loader2 } from 'lucide-react';
+import '../pages/NotesPage.css'; // Ensure proper styles
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const CLOUDINARY_UPLOAD_PRESET = 'notes_upload';
 
 export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
     const { user } = useAuth();
@@ -12,10 +12,12 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
         title: '',
         description: '',
         courseCode: '',
-        semester: ''
+        semester: '',
+        visibility: 'community' // 'private' or 'community'
     });
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [file, setFile] = useState(null);
+    const [dragActive, setDragActive] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
@@ -27,39 +29,58 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     const ALLOWED_TYPES = [
         'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // DOCX only
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+        'application/msword' // DOC
     ];
 
-    const handleFileChange = (e) => {
-        const selectedFile = e.target.files[0];
+    const validateAndSetFile = (selectedFile) => {
         if (!selectedFile) return;
-
-        // Validate file size
         if (selectedFile.size > MAX_FILE_SIZE) {
             setError('File size must be less than 10MB');
             return;
         }
-
-        // Validate file type
         if (!ALLOWED_TYPES.includes(selectedFile.type)) {
             setError('Invalid file type. Please upload only PDF or DOCX files.');
             return;
         }
-
         setFile(selectedFile);
         setError('');
     };
 
-    const handleCourseCodeChange = (code) => {
-        setFormData({ ...formData, courseCode: code });
-
-        // Auto-detect semester if possible
-        const semester = getSemesterForCourse(code);
-        if (semester) {
-            setFormData(prev => ({ ...prev, courseCode: code, semester }));
-        } else {
-            setFormData(prev => ({ ...prev, courseCode: code }));
+    const handleDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
         }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            validateAndSetFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            validateAndSetFile(e.target.files[0]);
+        }
+    };
+
+    const handleCourseCodeChange = (code) => {
+        setFormData(prev => {
+            const semester = getSemesterForCourse(code);
+            return {
+                ...prev,
+                courseCode: code,
+                semester: semester || prev.semester
+            };
+        });
     };
 
     const uploadToCloudinary = async (file) => {
@@ -69,7 +90,6 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
         formData.append('folder', 'student-hub/notes');
 
         const xhr = new XMLHttpRequest();
-
         return new Promise((resolve, reject) => {
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
@@ -77,61 +97,27 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
                     setUploadProgress(progress);
                 }
             });
-
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    console.log('Cloudinary upload response:', response);
-                    resolve(response);
+                    resolve(JSON.parse(xhr.responseText));
                 } else {
-                    const errorResponse = JSON.parse(xhr.responseText);
-                    reject(new Error(errorResponse.error?.message || 'Upload failed'));
+                    reject(new Error('Upload failed'));
                 }
             });
-
-            xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
-
-            // Use /raw/upload for documents - raw files are always public
-            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`);
+            xhr.addEventListener('error', () => reject(new Error('Network error')));
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`);
             xhr.send(formData);
         });
-    };
-
-    const generateThumbnailUrl = (cloudinaryResponse, fileType) => {
-        const publicId = cloudinaryResponse.public_id;
-        const cloudName = CLOUDINARY_CLOUD_NAME;
-
-        console.log('Generating thumbnail for:', { publicId, fileType, cloudinaryResponse });
-
-        // For PDFs, extract first page and create thumbnail
-        if (fileType.includes('pdf')) {
-            const thumbnailUrl = `https://res.cloudinary.com/${cloudName}/image/upload/pg_1,w_400,h_300,c_fill,f_jpg/${publicId}`;
-            console.log('PDF Thumbnail URL:', thumbnailUrl);
-            return thumbnailUrl;
-        }
-
-        // For DOCX files, try to generate thumbnail (may not work on free tier)
-        if (fileType.includes('document') || fileType.includes('word') || fileType.includes('wordprocessingml')) {
-            const thumbnailUrl = `https://res.cloudinary.com/${cloudName}/image/upload/pg_1,w_400,h_300,c_fill,f_jpg/${publicId}`;
-            console.log('DOCX Thumbnail URL:', thumbnailUrl);
-            return thumbnailUrl;
-        }
-
-        // Fallback for any other file types
-        console.log('Using fallback icon for file type:', fileType);
-        return null;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        // Validation
         if (!formData.title || !formData.courseCode || !file) {
             setError('Please fill in all required fields');
             return;
         }
-
         if (!user) {
             setError('You must be logged in to upload notes');
             return;
@@ -141,13 +127,15 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
             setUploading(true);
             setUploadProgress(0);
 
-            // Upload file to Cloudinary
             const cloudinaryResponse = await uploadToCloudinary(file);
 
-            // Generate thumbnail URL
-            const thumbnailUrl = generateThumbnailUrl(cloudinaryResponse, file.type);
+            // Generate Thumbnail for PDF
+            let thumbnailUrl = null;
+            if (file.type.includes('pdf')) {
+                // Ensure .jpg extension is present for image transformation to work correctly
+                thumbnailUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_300,c_fill,pg_1,f_jpg/${cloudinaryResponse.public_id}.jpg`;
+            }
 
-            // Prepare note data
             const noteData = {
                 user_id: user.id,
                 title: formData.title,
@@ -159,20 +147,19 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
                 file_type: file.type,
                 file_size: file.size,
                 thumbnail_url: thumbnailUrl
+                // removed is_public as it is acceptable to not send it if column missing
             };
 
-            // Save to database
             await onUploadSuccess(noteData);
 
-            // Reset form
-            setFormData({ title: '', description: '', courseCode: '', semester: '' });
+            // Reset
+            setFormData({ title: '', description: '', courseCode: '', semester: '', visibility: 'community' });
             setSelectedDepartment('');
             setFile(null);
-            setUploadProgress(0);
             onClose();
         } catch (err) {
-            console.error('Upload error:', err);
-            setError(err.message || 'Failed to upload note. Please try again.');
+            console.error(err);
+            setError('Failed to upload. Please try again.');
         } finally {
             setUploading(false);
         }
@@ -181,216 +168,204 @@ export default function NoteUploadModal({ show, onClose, onUploadSuccess }) {
     if (!show) return null;
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem'
-        }} onClick={onClose}>
-            <div className="card" style={{
-                maxWidth: '600px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                position: 'relative'
-            }} onClick={(e) => e.stopPropagation()}>
-                {/* Header */}
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '1.5rem'
-                }}>
-                    <h2 style={{ color: 'var(--text)', fontSize: '1.5rem', fontWeight: '700' }}>
-                        Upload Note
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="btn-secondary"
-                        style={{ padding: '0.5rem' }}
-                        disabled={uploading}
-                    >
-                        <X size={20} />
-                    </button>
+        <div className="upload-modal-overlay" onClick={onClose}>
+            <div className="upload-modal-card" onClick={e => e.stopPropagation()}>
+                <div className="upload-card-content">
+                    {/* Header */}
+                    <div className="upload-header">
+                        <div className="back-link" onClick={onClose}>
+                            <ArrowLeft size={16} className="mr-1" />
+                            Back to Library
+                        </div>
+                        <h2 className="upload-title">Upload Study Resource</h2>
+                        <p className="upload-subtitle">Share your knowledge with the community.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit}>
+                        {/* Drag & Drop Zone */}
+                        <div
+                            className={`drag-drop-zone ${dragActive ? 'bg-orange-100/50' : ''}`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                        >
+                            <input
+                                type="file"
+                                className="drag-drop-input"
+                                onChange={handleFileChange}
+                                accept=".pdf,.docx,.doc"
+                                disabled={uploading}
+                            />
+                            {file ? (
+                                <div className="text-center">
+                                    <div className="icon-circle bg-green-100 text-green-600">
+                                        <Upload size={32} />
+                                    </div>
+                                    <h3 className="drop-text-main text-green-600">{file.name}</h3>
+                                    <p className="drop-text-sub">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="icon-circle">
+                                        <CloudUpload size={32} />
+                                    </div>
+                                    <h3 className="drop-text-main">Drag & Drop files here</h3>
+                                    <p className="drop-text-sub">
+                                        or <span style={{ color: 'var(--primary-orange)', textDecoration: 'underline' }}>browse files</span> from your computer
+                                    </p>
+                                    <div className="file-types-row">
+                                        <span className="file-type-pill">PDF</span>
+                                        <span className="file-type-pill">DOCX</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Progress Bar */}
+                        {uploading && (
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ height: '4px', background: '#f3f4f6', borderRadius: '2px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', background: 'var(--primary-orange)', width: `${uploadProgress}%`, transition: 'width 0.3s' }} />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', textAlign: 'right' }}>{uploadProgress}% Uploaded</p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Form Fields */}
+                        <div className="upload-form-grid">
+                            {/* Title */}
+                            <div className="col-span-full form-group">
+                                <label>Resource Title</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="e.g. Calculus II Midterm Summary"
+                                    value={formData.title}
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            {/* Department (Additional Helper Field) */}
+                            <div className="form-group">
+                                <label>Department</label>
+                                <select
+                                    className="form-input"
+                                    value={selectedDepartment}
+                                    onChange={e => {
+                                        setSelectedDepartment(e.target.value);
+                                        setFormData(prev => ({ ...prev, courseCode: '' }));
+                                    }}
+                                >
+                                    <option value="">Select Dept</option>
+                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Course Code */}
+                            <div className="form-group">
+                                <label>Subject / Course Code</label>
+                                <div className="input-with-icon">
+                                    <BookOpen size={18} className="input-icon" />
+                                    <select
+                                        className="form-input has-icon"
+                                        value={formData.courseCode}
+                                        onChange={e => handleCourseCodeChange(e.target.value)}
+                                        disabled={!selectedDepartment}
+                                        required
+                                    >
+                                        <option value="">Select Course</option>
+                                        {availableCourses.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Semester */}
+                            <div className="form-group">
+                                <label>Semester</label>
+                                <div className="input-with-icon">
+                                    <Calendar size={18} className="input-icon" />
+                                    <select
+                                        className="form-input has-icon"
+                                        value={formData.semester}
+                                        onChange={e => setFormData({ ...formData, semester: e.target.value })}
+                                    >
+                                        <option value="">Select Semester</option>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Tags (Decorative) */}
+                            <div className="col-span-full form-group">
+                                <label>Tags</label>
+                                <div className="tags-input-container">
+                                    <span className="tag-chip">
+                                        #Exam <X size={12} className="tag-remove" />
+                                    </span>
+                                    <span className="tag-chip">
+                                        #Handwritten <X size={12} className="tag-remove" />
+                                    </span>
+                                    <input type="text" className="tags-input-field" placeholder="Type to add tags..." />
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="col-span-full form-group">
+                                <label>Description <span style={{ fontWeight: 400, color: '#9ca3af' }}>(Optional)</span></label>
+                                <textarea
+                                    className="form-input"
+                                    rows={4}
+                                    placeholder="Briefly describe what this resource covers..."
+                                    value={formData.description}
+                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer Visibility & Action */}
+                        <div className="upload-footer">
+                            {/* Visibility Toggle */}
+                            <div className="visibility-toggle-group">
+                                <div
+                                    className={`visibility-option ${formData.visibility === 'private' ? 'active' : ''}`}
+                                    onClick={() => setFormData({ ...formData, visibility: 'private' })}
+                                >
+                                    <Lock size={16} /> Private
+                                </div>
+                                <div
+                                    className={`visibility-option ${formData.visibility === 'community' ? 'active' : ''}`}
+                                    onClick={() => setFormData({ ...formData, visibility: 'community' })}
+                                >
+                                    <Globe size={16} /> Community
+                                </div>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="action-buttons">
+                                <button type="button" className="btn-cancel" onClick={onClose}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn-publish" disabled={uploading}>
+                                    {uploading ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
+                                    Publish Resource
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                    {/* Title */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            Title *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="e.g., Data Structures Lecture Notes"
-                            required
-                            disabled={uploading}
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            Description
-                        </label>
-                        <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            placeholder="Brief description of the notes..."
-                            rows={3}
-                            disabled={uploading}
-                        />
-                    </div>
-
-                    {/* Department */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            Department *
-                        </label>
-                        <select
-                            value={selectedDepartment}
-                            onChange={(e) => {
-                                setSelectedDepartment(e.target.value);
-                                setFormData({ ...formData, courseCode: '', semester: '' });
-                            }}
-                            required
-                            disabled={uploading}
-                        >
-                            <option value="">Select Department</option>
-                            {departments.map(dept => (
-                                <option key={dept} value={dept}>
-                                    {dept} - {departmentNames[dept] || dept}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Course Code */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            Course Code *
-                        </label>
-                        <select
-                            value={formData.courseCode}
-                            onChange={(e) => handleCourseCodeChange(e.target.value)}
-                            required
-                            disabled={!selectedDepartment || uploading}
-                        >
-                            <option value="">Select Course Code</option>
-                            {availableCourses.map(code => (
-                                <option key={code} value={code}>{code}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Semester */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            Semester {formData.semester && '(Auto-detected)'}
-                        </label>
-                        <select
-                            value={formData.semester}
-                            onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                            disabled={uploading}
-                        >
-                            <option value="">Not specified</option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                                <option key={sem} value={sem}>Semester {sem}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* File Upload */}
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>
-                            File * (Max 10MB)
-                        </label>
-                        <input
-                            type="file"
-                            onChange={handleFileChange}
-                            accept=".pdf,.docx"
-                            required
-                            disabled={uploading}
-                        />
-                        {file && (
-                            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Upload Progress */}
-                    {uploading && (
-                        <div style={{ marginBottom: '1rem' }}>
-                            <div style={{
-                                background: 'var(--input-bg)',
-                                borderRadius: '0.5rem',
-                                height: '0.5rem',
-                                overflow: 'hidden'
-                            }}>
-                                <div style={{
-                                    background: 'linear-gradient(to right, var(--primary), #ff4500)',
-                                    height: '100%',
-                                    width: `${uploadProgress}%`,
-                                    transition: 'width 0.3s ease'
-                                }} />
-                            </div>
-                            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                                Uploading... {uploadProgress}%
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Error Message */}
-                    {error && (
-                        <div style={{
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '0.5rem',
-                            padding: '0.75rem',
-                            marginBottom: '1rem',
-                            color: 'var(--error)'
-                        }}>
-                            {error}
-                        </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        className="btn-primary"
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem'
-                        }}
-                        disabled={uploading}
-                    >
-                        {uploading ? (
-                            <>
-                                <Loader2 size={20} className="animate-spin" />
-                                <span>Uploading...</span>
-                            </>
-                        ) : (
-                            <>
-                                <Upload size={20} />
-                                <span>Upload Note</span>
-                            </>
-                        )}
-                    </button>
-                </form>
+                {/* Footer Disclaimers */}
+                <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#9ca3af', padding: '1rem', borderTop: '1px solid var(--border-color)', margin: 0 }}>
+                    By uploading, you confirm that you have the right to share these materials and they adhere to the Community Guidelines.
+                </p>
             </div>
         </div>
     );

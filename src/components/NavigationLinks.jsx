@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Calculator, GraduationCap, FileText } from 'lucide-react';
+import { Calculator, GraduationCap, FileText, Wallet } from 'lucide-react';
 
 export default function NavigationLinks({ mobile = false, onNavigate }) {
     const location = useLocation();
@@ -41,6 +41,14 @@ export default function NavigationLinks({ mobile = false, onNavigate }) {
             >
                 <FileText size={mobile ? 20 : 18} />
                 <span>Notes</span>
+            </Link>
+            <Link
+                to="/expenses"
+                onClick={onNavigate}
+                style={linkStyle(location.pathname === '/expenses')}
+            >
+                <Wallet size={mobile ? 20 : 18} />
+                <span>Expenses</span>
             </Link>
         </>
     );
