@@ -115,10 +115,10 @@ export default function ExpenseList({ expenses, onEdit, onDelete, onSearch, filt
                                 </>
                             ) : (
                                 <>
-                                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Description</th>
-                                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Wallet</th>
-                                    <th style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Amount</th>
-                                    <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Actions</th>
+                                    <th style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}></th>
+                                    <th style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Wallet</th>
+                                    <th style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Amount</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Actions</th>
                                 </>
                             )}
                         </tr>
@@ -162,13 +162,13 @@ export default function ExpenseList({ expenses, onEdit, onDelete, onSearch, filt
                                     ) : (
                                         // Mobile Compact Layout
                                         <>
-                                            <td style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <td style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <div style={{ minWidth: '36px', height: '36px', borderRadius: '50%', backgroundColor: st.bg, color: st.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {getCategoryIcon(expense.category)}
                                                 </div>
                                             </td>
                                             
-                                            <td style={{ padding: '1rem 1.5rem' }}>
+                                            <td style={{ padding: '0.75rem 1rem' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '0.875rem' }}>{expense.wallet}</span>
                                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -180,10 +180,10 @@ export default function ExpenseList({ expenses, onEdit, onDelete, onSearch, filt
                                     )}
 
                                     {/* Amount Column - Same for both */}
-                                    <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>₹{parseFloat(expense.amount).toFixed(2)}</td>
+                                    <td style={{ padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem', fontWeight: 600 }}>₹{parseFloat(expense.amount).toFixed(2)}</td>
                                     
                                     {/* Actions Column - Same for both */}
-                                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                                    <td style={{ padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', alignItems: 'center' }}>
                                             <span style={{ color: 'var(--primary)', fontSize: '0.875rem', cursor: 'pointer', paddingRight: '0.5rem' }} onClick={(e) => { e.stopPropagation(); onEdit(expense); }}>View</span>
                                             <div 

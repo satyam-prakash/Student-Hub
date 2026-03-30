@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useMediaQuery } from '../../utils/useMediaQuery';
 
 export default function DashboardPanels({ settings, subscriptions, savingsGoals, onAddSubscription }) {
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const [autoCategorize, setAutoCategorize] = useState(settings?.auto_categorize || false);
     
     // Subscription form state
@@ -25,19 +27,19 @@ export default function DashboardPanels({ settings, subscriptions, savingsGoals,
         backgroundColor: 'var(--surface)',
         borderRadius: '1rem',
         border: '1px solid var(--border)',
-        padding: '1.5rem',
+        padding: isMobile ? '1.5rem' : '1rem',
         flex: '1',
         minWidth: '250px',
         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
     };
 
     return (
-        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: isMobile ? '1.5rem' : '1rem', flexWrap: 'wrap', marginBottom: isMobile ? '2rem' : '1rem' }}>
             
             {/* 1) Auto-Categorization Panel */}
             <div style={panelStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem' }}>1) Auto-Categorization</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '1.5rem' : '1rem' }}>
+                    <h3 style={{ fontSize: isMobile ? '1.1rem' : '1rem' }}>1) Auto-Categorization</h3>
                     {/* Fake Toggle Switch */}
                     <div 
                         onClick={() => setAutoCategorize(!autoCategorize)}
@@ -62,8 +64,8 @@ export default function DashboardPanels({ settings, subscriptions, savingsGoals,
 
             {/* 2) Subscription Manager */}
             <div style={panelStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem' }}>2) Subscription Manager</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '1.5rem' : '1rem' }}>
+                    <h3 style={{ fontSize: isMobile ? '1.1rem' : '1rem' }}>2) Subscription Manager</h3>
                     <button onClick={() => setIsAddingSub(!isAddingSub)} style={{ 
                         backgroundColor: isAddingSub ? 'var(--surface)' : 'var(--primary)', 
                         border: isAddingSub ? '1px solid var(--border)' : 'none', 
@@ -94,8 +96,8 @@ export default function DashboardPanels({ settings, subscriptions, savingsGoals,
 
             {/* 3) Savings Goal */}
             <div style={panelStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem' }}>3) Savings Goal</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '1.5rem' : '1rem' }}>
+                    <h3 style={{ fontSize: isMobile ? '1.1rem' : '1rem' }}>3) Savings Goal</h3>
                     <button style={{ 
                         backgroundColor: 'var(--primary)', border: 'none', color: '#fff', 
                         padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', cursor: 'pointer' 

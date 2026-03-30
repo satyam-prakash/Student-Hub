@@ -85,7 +85,7 @@ export default function Layout() {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <GraduationCap style={{ color: 'var(--primary)', width: '2rem', height: '2rem' }} />
+                        <img src="/studenthub_logo.svg" alt="StudentHub Logo" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} />
                         <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text)', letterSpacing: '-0.025em' }}>
                             Student<span style={{ color: 'var(--primary)' }}>Hub</span>
                         </span>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
 import AttendanceCalculator from './pages/AttendanceCalculator';
 import CGPACalculator from './pages/CGPACalculator';
 import NotesPage from './pages/NotesPage';
@@ -28,7 +29,8 @@ function App() {
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<AttendanceCalculator />} />
+            <Route index element={<Dashboard />} />
+            <Route path="attendance" element={<AttendanceCalculator />} />
             <Route path="cgpa" element={<CGPACalculator />} />
             <Route path="notes" element={<NotesPage />} />
             <Route path="expenses" element={<ExpenseTracker />} />
