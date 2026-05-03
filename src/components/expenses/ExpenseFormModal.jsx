@@ -1,10 +1,97 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
     X, Mic, MicOff, Camera, Coffee, Car, Receipt, 
     ShoppingBag, Heart, Shield, Plane, Book, Zap, Plus, CheckSquare, Edit2,
-    Wallet, CreditCard, Landmark
+    Wallet, CreditCard, Landmark, ShoppingCart, Utensils, Sandwich, Droplet,
+    Bus, MapPin, Lightbulb, Wifi, Smartphone, Shirt, Laptop,
+    Watch, Home, Pill, Stethoscope, TestTube, Film, Gamepad2, CalendarDays,
+    PlaneTakeoff, Hotel, GraduationCap, FileText,
+    Award, Wrench, Brush, HandCoins, DollarSign, Building, Scissors, Sparkles,
+    Dumbbell, AppWindow, Cloud, Users, Baby, User, Gift, PartyPopper,
+    Dog, Syringe
 } from 'lucide-react';
+import { CATEGORIES_WITH_SUBCATEGORIES, getSubcategories, CATEGORY_NAMES } from '../../utils/categories';
+
+// Subcategory icons mapping
+const SUBCATEGORY_ICONS = {
+    // Food
+    'Groceries': ShoppingCart,
+    'Dining Out': Utensils,
+    'Snacks': Sandwich,
+    'Beverages': Droplet,
+    // Transportation
+    'Fuel': Car,
+    'Public Transport': Bus,
+    'Taxi/Ride Share': Car,
+    'Parking': MapPin,
+    'Toll': MapPin,
+    // Bills
+    'Electricity': Lightbulb,
+    'Water': Droplet,
+    'Gas': Zap,
+    'Internet': Wifi,
+    'Mobile Recharge': Smartphone,
+    // Shopping
+    'Clothing': Shirt,
+    'Electronics': Laptop,
+    'Accessories': Watch,
+    'Home Items': Home,
+    // Health
+    'Medicines': Pill,
+    'Doctor Visits': Stethoscope,
+    'Lab Tests': TestTube,
+    'Health Insurance': Shield,
+    // Entertainment
+    'Movies': Film,
+    'Games': Gamepad2,
+    'Events': CalendarDays,
+    'Streaming Subscriptions': Film,
+    // Travel
+    'Flights': PlaneTakeoff,
+    'Hotels': Hotel,
+    'Local Transport': Bus,
+    'Travel Food': Utensils,
+    // Education
+    'Courses': GraduationCap,
+    'Books': Book,
+    'Exam Fees': FileText,
+    'Certifications': Award,
+    // Utilities
+    'House Maintenance': Wrench,
+    'Cleaning': Brush,
+    'Repairs': Wrench,
+    // Finance
+    'Rent': Home,
+    'Loan EMI': HandCoins,
+    'Insurance': Shield,
+    'Taxes': DollarSign,
+    'Investments': Building,
+    // Personal Care
+    'Salon': Scissors,
+    'Skincare': Sparkles,
+    'Grooming': Scissors,
+    'Fitness': Dumbbell,
+    // Digital
+    'Apps': AppWindow,
+    'Software': Laptop,
+    'Cloud Storage': Cloud,
+    'Online Services': Wifi,
+    // Family
+    'Household Support': Users,
+    'Children Expenses': Baby,
+    'Elder Care': User,
+    // Gifts & Donations
+    'Gifts': Gift,
+    'Charity': Heart,
+    'Festivals': PartyPopper,
+    // Pets
+    'Food': ShoppingCart,
+    'Vet': Syringe,
+    'Accessories': Dog,
+    // Other
+    'Miscellaneous': Plus
+};
 
 const CATEGORIES = [
     { name: 'Food', icon: Coffee },
@@ -16,6 +103,12 @@ const CATEGORIES = [
     { name: 'Travel', icon: Plane },
     { name: 'Education', icon: Book },
     { name: 'Utilities', icon: Zap },
+    { name: 'Finance', icon: Plus },
+    { name: 'Personal Care', icon: Heart },
+    { name: 'Digital', icon: Shield },
+    { name: 'Family', icon: Heart },
+    { name: 'Gifts & Donations', icon: Plus },
+    { name: 'Pets', icon: Heart },
     { name: 'Other', icon: Plus }
 ];
 
@@ -55,6 +148,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
     const [formData, setFormData] = useState({
         amount: '',
         category: CATEGORIES[0].name,
+        subcategory: '',
         wallet: smartDefault,
         date: new Date().toISOString().split('T')[0],
         description: '',
@@ -99,6 +193,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
             setFormData({
                 amount: initialData.amount,
                 category: initialData.category,
+                subcategory: initialData.subcategory || '',
                 wallet: initialData.wallet,
                 date: new Date(initialData.date).toISOString().split('T')[0],
                 description: parts[0] || '',
@@ -111,6 +206,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
             setFormData({
                 amount: '',
                 category: CATEGORIES[0].name,
+                subcategory: '',
                 wallet: getMostUsedWallet(),
                 date: new Date().toISOString().split('T')[0],
                 description: '',
@@ -137,6 +233,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
         recordWalletUse(formData.wallet);
         const submissionData = {
             ...formData,
+            amount: parseFloat(formData.amount),
             description: formData.notes ? `${formData.description} | Note: ${formData.notes}` : formData.description,
             date: new Date(formData.date).toISOString()
         };
@@ -188,6 +285,15 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
                     outline: none !important;
                     box-shadow: none !important;
                     border: none !important;
+                }
+                /* Hide number input spinner arrows */
+                .expense-input::-webkit-outer-spin-button,
+                .expense-input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                .expense-input[type=number] {
+                    -moz-appearance: textfield;
                 }
                 .expense-text-input {
                     border-radius: 8px !important;
@@ -242,6 +348,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
                                 step="0.01"
                                 value={formData.amount}
                                 onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                                onWheel={(e) => e.target.blur()}
                                 placeholder="0"
                                 disabled={!isEditMode}
                                 style={{
@@ -345,7 +452,7 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
                                 return (
                                     <div 
                                         key={cat.name}
-                                        onClick={() => isEditMode && setFormData({...formData, category: cat.name})}
+                                        onClick={() => isEditMode && setFormData({...formData, category: cat.name, subcategory: ''})}
                                         style={{
                                             display: 'flex',
                                             flexDirection: 'column',
@@ -374,6 +481,91 @@ export default function ExpenseFormModal({ isOpen, onClose, onSubmit, initialDat
                             })}
                         </div>
                     </div>
+
+                    {/* Subcategory Selection - appears below selected category */}
+                    {formData.category && getSubcategories(formData.category).length > 0 && (
+                        <div>
+                            <label style={{ 
+                                color: 'var(--text-secondary)', 
+                                fontSize: '0.7rem', 
+                                fontWeight: 600, 
+                                letterSpacing: '0.05em', 
+                                marginBottom: '0.5rem', 
+                                display: 'block' 
+                            }}>
+                                SUBCATEGORY
+                            </label>
+                            
+                            {isEditMode ? (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(5, 1fr)',
+                                    gap: isMobile ? '0.25rem' : '0.5rem',
+                                    rowGap: isMobile ? '0.5rem' : '0.75rem'
+                                }}>
+                                    {getSubcategories(formData.category).map(sub => {
+                                        const isSelected = formData.subcategory === sub;
+                                        const IconComponent = SUBCATEGORY_ICONS[sub] || Plus;
+                                        
+                                        return (
+                                            <div
+                                                key={sub}
+                                                onClick={() => setFormData({...formData, subcategory: sub})}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '0.25rem',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: isMobile ? '40px' : '56px', 
+                                                    height: isMobile ? '40px' : '56px', 
+                                                    borderRadius: isMobile ? '12px' : '16px',
+                                                    backgroundColor: isSelected ? 'rgba(255, 102, 0, 0.1)' : 'transparent',
+                                                    color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                                                    border: isSelected ? '2px solid var(--primary)' : 'none',
+                                                    boxShadow: isSelected ? '0 0 10px rgba(255, 102, 0, 0.2)' : 'none',
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}>
+                                                    <IconComponent size={isMobile ? 18 : 24} />
+                                                </div>
+                                                <span style={{ 
+                                                    fontSize: isMobile ? '0.65rem' : '0.7rem', 
+                                                    color: isSelected ? 'var(--primary)' : 'var(--text-secondary)', 
+                                                    textAlign: 'center',
+                                                    lineHeight: 1.2
+                                                }}>
+                                                    {sub}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: isMobile ? '0.6rem 0.75rem' : '0.75rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    background: 'var(--surface)',
+                                    color: 'var(--text)',
+                                    fontSize: isMobile ? '0.85rem' : '0.95rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    border: '1px solid var(--border)'
+                                }}>
+                                    {formData.subcategory && SUBCATEGORY_ICONS[formData.subcategory] && 
+                                        React.createElement(SUBCATEGORY_ICONS[formData.subcategory], { size: 18 })
+                                    }
+                                    <span>{formData.subcategory || 'Not specified'}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Wallet Options */}
                     <div>

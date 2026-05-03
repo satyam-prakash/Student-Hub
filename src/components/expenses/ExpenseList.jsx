@@ -155,7 +155,12 @@ export default function ExpenseList({ expenses, onEdit, onDelete, onSearch, filt
                                                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: st.bg, color: st.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {getCategoryIcon(expense.category)}
                                                 </div>
-                                                <span>{expense.category}</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: 600 }}>{expense.category}</span>
+                                                    {expense.subcategory && (
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{expense.subcategory}</span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem' }}>{expense.wallet}</td>
                                         </>
@@ -165,6 +170,12 @@ export default function ExpenseList({ expenses, onEdit, onDelete, onSearch, filt
                                             <td style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <div style={{ minWidth: '36px', height: '36px', borderRadius: '50%', backgroundColor: st.bg, color: st.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {getCategoryIcon(expense.category)}
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{expense.category}</span>
+                                                    {expense.subcategory && (
+                                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{expense.subcategory}</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             

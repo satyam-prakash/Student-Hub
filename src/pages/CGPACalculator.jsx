@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useMediaQuery } from '../utils/useMediaQuery';
 import { useGeminiUpload } from '../hooks/useGeminiUpload';
 import { useGradeData } from '../hooks/useGradeData';
+import { useScrollRestoration } from '../hooks/usePersistedState';
 import CircularProgress from '../components/CircularProgress';
 import TermCard from '../components/TermCard';
 import ImageUploadModal from '../components/ImageUploadModal';
@@ -14,6 +15,9 @@ export default function CGPACalculator() {
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    
+    // Restore scroll position
+    useScrollRestoration('cgpa_calculator');
 
     const {
         terms,

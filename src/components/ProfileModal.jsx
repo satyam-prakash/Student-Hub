@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { User, Mail, Hash, Lock, X, Loader2, AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { User, Mail, Lock, X, Loader2, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 import './ProfileModal.css';
 
 export default function ProfileModal({ show, onClose }) {
@@ -45,7 +45,7 @@ export default function ProfileModal({ show, onClose }) {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             setProfile(data);
@@ -157,9 +157,9 @@ export default function ProfileModal({ show, onClose }) {
                         ) : (
                             <>
                                 <h2 className="profile-name">{profile?.full_name || 'Student'}</h2>
-                                <div className="profile-reg-no">
-                                    <Hash size={14} />
-                                    <span>{profile?.registration_number}</span>
+                                <div className="profile-reg-no" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                    <Mail size={14} />
+                                    <span>{user?.email}</span>
                                 </div>
                             </>
                         )}
@@ -235,37 +235,6 @@ export default function ProfileModal({ show, onClose }) {
                                                 placeholder="Enter your email"
                                             />
                                         </div>
-                                        {user.email && user.email.includes('@cgpa.app') && (
-                                            <div className="warning-box">
-                                                <AlertCircle size={16} />
-                                                <span>You are using a placeholder email. Please update to your real email to secure your account.</span>
-                                            </div>
-                                        )}
-
-                                        {/* Show Pending Email Change */}
-                                        {user.new_email && (
-                                            <div className="notification-box info mt-2">
-                                                <Mail size={16} />
-                                                <span>
-                                                    <strong>Pending Change:</strong> Check your inbox at <u>{user.new_email}</u> to confirm.
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label className="form-label">Registration Number</label>
-                                        <div className="form-input-wrapper">
-                                            <Hash className="form-icon" size={18} />
-                                            <input
-                                                type="text"
-                                                className="form-input"
-                                                value={profile?.registration_number || ''}
-                                                disabled
-                                                style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                                            />
-                                        </div>
-                                        <span className="helper-text">Registration number cannot be changed.</span>
                                     </div>
 
                                     <div className="action-row">

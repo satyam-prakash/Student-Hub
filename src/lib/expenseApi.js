@@ -9,7 +9,8 @@ export const expenseApi = {
             .from('expenses')
             .select('*')
             .eq('user_id', userId)
-            .order('date', { ascending: false });
+            .order('date', { ascending: false })
+            .order('created_at', { ascending: false });
 
         if (options.limit) query = query.limit(options.limit);
         if (options.startDate && options.endDate) {
@@ -132,5 +133,186 @@ export const expenseApi = {
         return Object.entries(categoryTotals)
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value);
-    }
+    },
+
+    // ---- INCOME EVENTS (Feature 7 - Cash Flow Timeline) ----
+    async getIncomeEvents(userId) {
+        const { data, error } = await supabase
+            .from('income_events')
+            .select('*')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async addIncomeEvent(eventData) {
+        if (!eventData.user_id) throw new Error('User ID is required');
+        const { data, error } = await supabase
+            .from('income_events')
+            .insert([eventData])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateIncomeEvent(id, userId, eventData) {
+        const { data, error } = await supabase
+            .from('income_events')
+            .update(eventData)
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteIncomeEvent(id, userId) {
+        const { error } = await supabase
+            .from('income_events')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId);
+        if (error) throw error;
+        return true;
+    },
+
+    // ---- WISHLIST ITEMS (Feature 14 - Wishlist → Goal Pipeline) ----
+    async getWishlistItems(userId) {
+        const { data, error } = await supabase
+            .from('wishlist_items')
+            .select('*, savings_goals(*)')
+            .eq('user_id', userId)
+            .order('position', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async addWishlistItem(itemData) {
+        if (!itemData.user_id) throw new Error('User ID is required');
+        const { data, error } = await supabase
+            .from('wishlist_items')
+            .insert([itemData])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateWishlistItem(id, userId, itemData) {
+        const { data, error } = await supabase
+            .from('wishlist_items')
+            .update(itemData)
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteWishlistItem(id, userId) {
+        const { error } = await supabase
+            .from('wishlist_items')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId);
+        if (error) throw error;
+        return true;
+    },
+
+    async updateWishlistPositions(userId, items) {
+        // Bulk update positions for drag-and-drop
+        const updates = items.map((item, index) => ({
+            id: item.id,
+            user_id: userId,
+            position: index,
+        }));
+        
+        const { error } = await supabase
+            .from('wishlist_items')
+            .upsert(updates);
+        if (error) throw error;
+        return true;
+    },
+
+    // ---- USER BADGES (Feature 13 - Gamification) ----
+    async getUserBadges(userId) {
+        const { data, error } = await supabase
+            .from('user_badges')
+            .select('*')
+            .eq('user_id', userId)
+            .order('earned_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async awardBadge(userId, badgeId, metadata = {}) {
+        const { data, error } = await supabase
+            .from('user_badges')
+            .insert([{
+                user_id: userId,
+                badge_id: badgeId,
+                metadata,
+            }])
+            .select()
+            .single();
+        if (error) {
+            // Ignore duplicate badge errors (UNIQUE constraint)
+            if (error.code === '23505') return null;
+            throw error;
+        }
+        return data;
+    },
+
+    // ---- CATEGORY BUDGETS (Feature 11 - Budget Wizard) ----
+    async getCategoryBudgets(userId) {
+        const { data, error } = await supabase
+            .from('category_budgets')
+            .select('*')
+            .eq('user_id', userId);
+        if (error) throw error;
+        return data || [];
+    },
+
+    async saveCategoryBudgets(userId, budgets) {
+        // budgets is array of { category, allocated_amount, min_amount, max_amount }
+        const toInsert = budgets.map(b => ({
+            user_id: userId,
+            ...b,
+        }));
+        
+        const { error } = await supabase
+            .from('category_budgets')
+            .upsert(toInsert, {
+                onConflict: 'user_id,category',
+            });
+        if (error) throw error;
+        return true;
+    },
+
+    // ── Monthly Expenditure History ──────────────────────────────
+    async getMonthlyHistory(userId, limit = 12) {
+        const { data, error } = await supabase
+            .from('monthly_expenditure_history')
+            .select('*')
+            .eq('user_id', userId)
+            .order('year', { ascending: false })
+            .order('month', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+        return data || [];
+    },
+
+    async calculateMonthlyHistory(userId, year, month) {
+        const { data, error } = await supabase.rpc('calculate_monthly_expenditure', {
+            p_user_id: userId,
+            p_year: year,
+            p_month: month,
+        });
+        if (error) throw error;
+        return data;
+    },
 };

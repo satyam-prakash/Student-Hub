@@ -1,0 +1,77 @@
+﻿[36mvite v5.4.11 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 44 modules transformed.
+node.exe : [31mx[39m 
+Build failed in 257ms
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:
+\Users\praka\AppData\Roami
+ng\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (  
+  [31mx[39m Build fail   
+ ed in 257ms:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+[31merror during build:
+[31m[vite:build-import-an
+alysis] [plugin vite:build
+-import-analysis] src/hook
+s/useHistoricalAnalytics.j
+s (164:46): Failed to 
+parse source for import 
+analysis because the 
+content contains invalid 
+JS syntax. If you are 
+using JSX, make sure to 
+name the file with the 
+.jsx or .tsx 
+extension.[31m
+file: [36mD:/Attandance_c
+alculator/src/hooks/useHis
+toricalAnalytics.js:164:46
+[31m
+[33m
+162:         <HistoricalAn
+alyticsContext.Provider 
+value={value}>
+163:             
+{children}
+164:         </HistoricalA
+nalyticsContext.Provider>
+                          
+                         ^
+165:     );
+166: }
+[31m
+    at getRollupError (fil
+e:///D:/Attandance_calcula
+tor/node_modules/rollup/di
+st/es/shared/parseAst.js:4
+01:41)
+    at error (file:///D:/A
+ttandance_calculator/node_
+modules/rollup/dist/es/sha
+red/parseAst.js:397:42)
+    at Object.error (file:
+///D:/Attandance_calculato
+r/node_modules/rollup/dist
+/es/shared/node-entry.js:2
+2129:20)
+    at Object.error (file:
+///D:/Attandance_calculato
+r/node_modules/rollup/dist
+/es/shared/node-entry.js:2
+1186:42)
+    at Object.transform (f
+ile:///D:/Attandance_calcu
+lator/node_modules/vite/di
+st/node/chunks/dep-CB_7IfJ
+-.js:64647:14)[39m

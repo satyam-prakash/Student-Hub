@@ -4,21 +4,25 @@ import ResultsSection from '../components/ResultsSection';
 import { calculateAttendance } from '../utils/calculator';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { usePersistedState, useScrollRestoration } from '../hooks/usePersistedState';
 import { Save, Download, Loader2 } from 'lucide-react';
 
 export default function AttendanceCalculator() {
     const { user } = useAuth();
-    const [subjects, setSubjects] = useState([{ name: '', attended: 0, dutyLeave: 0, total: 0 }]);
-    const [schedule, setSchedule] = useState({
+    const [subjects, setSubjects] = usePersistedState('attendance_subjects', [{ name: '', attended: 0, dutyLeave: 0, total: 0 }]);
+    const [schedule, setSchedule] = usePersistedState('attendance_schedule', {
         Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []
     });
-    const [holidays, setHolidays] = useState([]);
-    const [lastDate, setLastDate] = useState('');
-    const [results, setResults] = useState(null);
+    const [holidays, setHolidays] = usePersistedState('attendance_holidays', []);
+    const [lastDate, setLastDate] = usePersistedState('attendance_last_date', '');
+    const [results, setResults] = usePersistedState('attendance_results', null);
     const [loading, setLoading] = useState(false);
-    const [regNo, setRegNo] = useState('');
-    const [todayIncluded, setTodayIncluded] = useState(false);
+    const [regNo, setRegNo] = usePersistedState('attendance_reg_no', '');
+    const [todayIncluded, setTodayIncluded] = usePersistedState('attendance_today_included', false);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
+    
+    // Restore scroll position
+    useScrollRestoration('attendance_calculator');
 
     // Load data on mount if user exists
     useEffect(() => {
@@ -26,15 +30,21 @@ export default function AttendanceCalculator() {
             if (user.user_metadata?.registration_number) {
                 setRegNo(user.user_metadata.registration_number);
             }
-            // Only load data once per session to prevent resetting view on tab switch
-            if (!initialLoadDone) {
+            // Check if we have cached data
+            const cachedSubjects = sessionStorage.getItem('attendance_subjects');
+            const hasCachedData = cachedSubjects && cachedSubjects !== '[{"name":"","attended":0,"dutyLeave":0,"total":0}]';
+            
+            // Only load from DB if no cached data or haven't loaded yet
+            if (!hasCachedData && !initialLoadDone) {
                 loadData();
+                setInitialLoadDone(true);
+            } else if (hasCachedData) {
                 setInitialLoadDone(true);
             }
         } else {
             setInitialLoadDone(false);
         }
-    }, [user, initialLoadDone]);
+    }, [user]); // Removed initialLoadDone from dependencies
 
     // Listen for global Load/Save events from header
     useEffect(() => {
@@ -58,9 +68,9 @@ export default function AttendanceCalculator() {
                 .from('attendance_data')
                 .select('*')
                 .eq('user_id', user.id)
-                .single();
+                .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') throw error;
+            if (error) throw error;
 
             if (data) {
                 setSubjects(data.subjects || []);

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { expenseApi } from '../lib/expenseApi';
+import { usePersistedState, useScrollRestoration } from '../hooks/usePersistedState';
 import {
   LayoutDashboard, Calculator, GraduationCap, FileText, Wallet,
   ArrowRight, Calendar, TrendingUp, AlertTriangle, CheckCircle,
@@ -95,35 +96,43 @@ function SkeletonRow({ count = 3 }) {
 export default function Dashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const lastFetchTime = useRef(null);
 
-  /* ── data state ── */
-  const [attendanceData, setAttendanceData] = useState(null);
-  const [cgpaData, setCgpaData] = useState(null);
-  const [expenses, setExpenses] = useState([]);
-  const [expenseSettings, setExpenseSettings] = useState(null);
-  const [categoriesData, setCategoriesData] = useState([]);
-  const [recentNotes, setRecentNotes] = useState([]);
-  const [totalNotes, setTotalNotes] = useState(0);
+  /* ── data state with persistence ── */
+  const [attendanceData, setAttendanceData] = usePersistedState('dashboard_attendance', null);
+  const [cgpaData, setCgpaData] = usePersistedState('dashboard_cgpa', null);
+  const [expenses, setExpenses] = usePersistedState('dashboard_expenses', []);
+  const [expenseSettings, setExpenseSettings] = usePersistedState('dashboard_expense_settings', null);
+  const [categoriesData, setCategoriesData] = usePersistedState('dashboard_categories', []);
+  const [recentNotes, setRecentNotes] = usePersistedState('dashboard_recent_notes', []);
+  const [totalNotes, setTotalNotes] = usePersistedState('dashboard_total_notes', 0);
+
+  // Restore scroll position
+  useScrollRestoration('dashboard');
 
   const fetchAll = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    
     try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+      const lastDay = String(new Date(year, now.getMonth() + 1, 0).getDate()).padStart(2, '0');
+      const startStr = `${year}-${monthStr}-01`;
+      const endStr = `${year}-${monthStr}-${lastDay}`;
+
       const [attRes, cgpaRes, expRes, catRes, setRes, notesRes, notesCountRes] = await Promise.allSettled([
         // Attendance
-        supabase.from('attendance_data').select('*').eq('user_id', user.id).single(),
+        supabase.from('attendance_data').select('*').eq('user_id', user.id).maybeSingle(),
         // CGPA
-        supabase.from('student_cgpa_data').select('*').eq('user_id', user.id).single(),
+        supabase.from('student_cgpa_data').select('*').eq('user_id', user.id).maybeSingle(),
         // Expenses (current month)
         expenseApi.getExpenses(user.id, {
-          startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-          endDate:   new Date().toISOString().split('T')[0],
+          startDate: startStr,
+          endDate: endStr,
         }),
         // Category totals
-        expenseApi.getExpensesByCategory(user.id,
-          new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-          new Date().toISOString().split('T')[0]
-        ),
+        expenseApi.getExpensesByCategory(user.id, startStr, endStr),
         // Expense settings
         expenseApi.getSettings(user.id),
         // Recent notes (5)
@@ -142,6 +151,8 @@ export default function Dashboard() {
         setRecentNotes(notesRes.value.data);
       if (notesCountRes.status === 'fulfilled')
         setTotalNotes(notesCountRes.value?.count || 0);
+      
+      lastFetchTime.current = Date.now();
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     } finally {
@@ -149,7 +160,42 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { 
+    // Check if we have cached data from sessionStorage
+    const cachedAttendance = sessionStorage.getItem('dashboard_attendance');
+    const cachedCgpa = sessionStorage.getItem('dashboard_cgpa');
+    const cachedExpenses = sessionStorage.getItem('dashboard_expenses');
+    const hasCachedData = cachedAttendance || cachedCgpa || (cachedExpenses && cachedExpenses !== '[]');
+    
+    // Only show loading if we don't have cached data
+    if (!hasCachedData) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+    
+    fetchAll(); 
+  }, [fetchAll]);
+
+  /* Handle tab visibility - only refresh if data is stale (>5 minutes) */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        const timeSinceLastFetch = lastFetchTime.current 
+          ? Date.now() - lastFetchTime.current 
+          : Infinity;
+        
+        // Only refresh if data is older than 5 minutes
+        const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+        if (timeSinceLastFetch > STALE_TIME) {
+          fetchAll();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, fetchAll]);
 
   /* ─── derived values ─── */
   const now = new Date();

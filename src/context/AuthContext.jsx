@@ -10,16 +10,15 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check active sessions and sets the user
+        // Check for an active session on mount
         const getSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setUser(session?.user ?? null);
             setLoading(false);
         };
-
         getSession();
 
-        // Listen for changes on auth state (logged in, signed out, etc.)
+        // Subscribe to auth state changes (login, logout, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
             setLoading(false);
@@ -28,94 +27,61 @@ export const AuthProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
-    // Sync Profile Data (Email, Name, Avatar) with Auth Data
+    // After any login, ensure the profile row exists and is up-to-date
     useEffect(() => {
-        const syncProfileData = async () => {
-            if (!user) return;
+        if (!user) return;
 
+        const syncProfile = async () => {
             try {
-                // Get current profile
-                // Use maybeSingle() to avoid 406 error if row is missing
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('*')
+                    .select('id, full_name, email, avatar_url')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                const metadata = user.user_metadata || {};
-                const googleName = metadata.full_name || metadata.name;
+                const meta = user.user_metadata || {};
+                const googleName = meta.full_name || meta.name || null;
+                const googleAvatar = meta.avatar_url || meta.picture || null;
 
-                // Case 1: Profile does not exist - INSERT
                 if (!profile) {
-                    console.log('Profile missing. Creating new profile from Google data...');
-                    const newProfile = {
+                    // Profile missing — create it (DB trigger should handle this,
+                    // but this is a client-side safety net)
+                    await supabase.from('profiles').insert([{
                         id: user.id,
                         email: user.email,
-                        full_name: googleName || 'Student',
-                        // Use PENDING prefix to trigger onboarding flow
-                        registration_number: 'PENDING_' + user.id
-                    };
-
-                    const { error: insertError } = await supabase
-                        .from('profiles')
-                        .insert([newProfile]);
-
-                    if (insertError) {
-                        console.error('Error creating profile:', insertError);
-                    } else {
-                        console.log('Created new profile:', newProfile);
-                    }
+                        full_name: googleName || meta.full_name || 'Student',
+                        avatar_url: googleAvatar,
+                    }]);
                     return;
                 }
 
-                // Case 2: Profile exists - UPDATE if needed
+                // Profile exists — sync any stale fields
                 const updates = {};
+                if (user.email && profile.email !== user.email) updates.email = user.email;
+                if (googleName && (!profile.full_name || profile.full_name === 'Student')) updates.full_name = googleName;
+                if (googleAvatar && !profile.avatar_url) updates.avatar_url = googleAvatar;
 
-                // 2.1 Sync Email
-                if (profile.email !== user.email) {
-                    updates.email = user.email;
-                }
-
-                // 2.2 Sync Name from Google (if profile name is empty or default)
-                const currentName = profile.full_name;
-                if (googleName && (!currentName || currentName === 'Student')) {
-                    updates.full_name = googleName;
-                }
-
-                // Apply updates if any
                 if (Object.keys(updates).length > 0) {
-                    const { error: updateError } = await supabase
-                        .from('profiles')
-                        .update(updates)
-                        .eq('id', user.id);
-
-                    if (updateError) console.error('Error updating profile:', updateError);
-                    else console.log('Profile synced with Google data:', updates);
+                    await supabase.from('profiles').update({ ...updates, updated_at: new Date() }).eq('id', user.id);
                 }
-
             } catch (err) {
-                console.error('Error syncing profile data:', err);
+                console.error('Profile sync error:', err);
             }
         };
 
-        syncProfileData();
+        syncProfile();
     }, [user]);
 
     const value = {
         signUp: (data) => supabase.auth.signUp(data),
         signIn: (data) => supabase.auth.signInWithPassword(data),
-        googleSignIn: () => {
-            console.log('Google Sign In initiated.');
-            console.log('RedirectTo Origin:', window.location.origin);
-            return supabase.auth.signInWithOAuth({
+        googleSignIn: () =>
+            supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    redirectTo: window.location.origin
-                }
-            });
-        },
+                options: { redirectTo: window.location.origin },
+            }),
         signOut: async () => {
-            setUser(null); // Optimistically clear user to trigger UI update
+            setUser(null);
             await supabase.auth.signOut();
         },
         user,

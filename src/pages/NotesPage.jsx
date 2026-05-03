@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../hooks/useNotes';
+import { usePersistedState, useScrollRestoration } from '../hooks/usePersistedState';
 import NoteCard from '../components/NoteCard';
 import NotesSearchBar from '../components/NotesSearchBar';
 import NoteUploadModal from '../components/NoteUploadModal';
@@ -12,15 +13,28 @@ export default function NotesPage() {
     const { user } = useAuth();
     const { notes, loading, fetchNotes, deleteNote, incrementDownloads, createNote, trendingNotes, fetchTrendingNotes } = useNotes();
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const [filters, setFilters] = useState({});
+    const [filters, setFilters] = usePersistedState('notes_filters', {});
     const [viewerNote, setViewerNote] = useState(null);
+    
+    // Restore scroll position
+    useScrollRestoration('notes_page');
 
     const handleViewNote = (note) => {
         setViewerNote(note);
     };
 
     useEffect(() => {
-        fetchNotes();
+        // Check if we have cached filters
+        const cachedFilters = sessionStorage.getItem('notes_filters');
+        const hasFilters = cachedFilters && cachedFilters !== '{}';
+        
+        if (hasFilters) {
+            // Fetch with cached filters
+            fetchNotes(filters);
+        } else {
+            // Initial fetch with no filters
+            fetchNotes();
+        }
         fetchTrendingNotes();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

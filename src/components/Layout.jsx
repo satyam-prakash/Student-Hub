@@ -12,7 +12,7 @@ import ProfileModal from './ProfileModal';
 import { supabase } from '../lib/supabase';
 import { useEffect } from 'react';
 
-export default function Layout() {
+export default function Layout({ children }) {
     const { user, signOut } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -160,7 +160,7 @@ export default function Layout() {
             )}
 
             <main className="flex-1 p-6 w-full">
-                <Outlet />
+                {children || <Outlet />}
             </main>
 
             <footer className="border-t border-gray-800 py-6 text-center text-gray-600 text-sm">
